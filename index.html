@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI 손동작 캐릭터 조종실</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Noto Sans KR",sans-serif;color:#17223b;background:#f5f7fc}*{box-sizing:border-box}
+body{margin:0}main{max-width:1050px;margin:auto;padding:15px}h1{font-size:clamp(23px,4vw,34px);margin:8px 0}h2{font-size:19px;margin:0 0 12px}.sub{color:#63708a;line-height:1.6}.layout{display:grid;grid-template-columns:1fr 1fr;gap:14px}.card{background:white;border:1px solid #dce3f1;border-radius:18px;padding:17px;margin:14px 0;box-shadow:0 3px 14px #1c2b5610}.btns{display:flex;flex-wrap:wrap;gap:8px}.btns button{flex:1;min-width:110px}button,.upload{background:#eaf0ff;border:1px solid #cad7fc;color:#273c88;padding:13px 10px;border-radius:11px;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation}button.primary{background:#3c56ce;color:white;border-color:#3c56ce}button:disabled{opacity:.45;cursor:default}video{width:100%;aspect-ratio:4/3;background:#17223b;object-fit:cover;transform:scaleX(-1);border-radius:13px}.status{padding:12px;border-radius:12px;background:#f1f4fb;line-height:1.5;margin:12px 0;overflow-wrap:anywhere}.good{background:#eaf8f0}.bad{background:#fff0f0;color:#8b2934}.tiny{font-size:13px;color:#66738a;line-height:1.5}.count{font-weight:800;color:#3c56ce}.stage{height:310px;background:linear-gradient(180deg,#dff1ff,#f9f4ff);border-radius:15px;display:flex;align-items:center;justify-content:center;overflow:hidden}.character{max-height:75%;max-width:70%;object-fit:contain;transform-origin:center bottom;filter:drop-shadow(0 12px 8px #35406a33)}.character.jump{animation:jump .85s ease-in-out infinite}.character.dance{animation:dance .9s ease-in-out infinite}@keyframes jump{0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(-62px) scale(1.06)}}@keyframes dance{0%,100%{transform:rotate(-14deg) translateX(-9px)}50%{transform:rotate(14deg) translateX(9px)}}input[type=file]{display:none}.label{font-weight:700;margin:12px 0 5px}.meter{height:8px;border-radius:9px;background:#e8edf9;overflow:hidden}.meter>div{height:100%;background:#657be2;width:0%;transition:width .15s}footer{margin:18px 0;color:#68758b;font-size:12px}@media(max-width:750px){.layout{grid-template-columns:1fr}.stage{height:270px}.card{padding:14px}}
+</style></head><body><main>
+<h1>✋ AI 손동작 캐릭터 조종실</h1>
+<p class="sub">웹캠으로 <b>손동작 A와 B</b>를 직접 가르치고, 내 캐릭터를 업로드해 움직여 보세요. 태블릿의 Chrome에서 <b>HTTPS 주소</b>로 접속하는 것을 권장합니다.</p>
+<div class="layout"><div>
+<section class="card"><h2>1. 웹캠 켜기</h2><video id="camera" autoplay muted playsinline></video>
+<div class="btns"><button id="start" class="primary">📷 카메라 켜기</button><button id="stop" disabled>카메라 끄기</button></div>
+<div id="status" class="status" role="status">카메라를 켜 주세요.</div>
+<p class="tiny">손 전체가 화면에 보이도록 해 주세요. 카메라를 켜면 기기에서 손 위치를 분석합니다.</p></section>
+<section class="card"><h2>2. 손동작 A / B 학습시키기</h2>
+<p class="tiny">예: A = 브이(V), B = 손바닥 펼치기. <b>동작은 직접 정할 수 있어요.</b> 같은 손동작을 조금씩 다른 각도와 거리에서 촬영하면 좋아요.</p>
+<div class="btns"><button id="collectA" disabled>✌️ A 데이터 수집</button><button id="collectB" disabled>🖐️ B 데이터 수집</button></div>
+<p class="tiny">각 버튼을 <b>2~4초간 길게 누르세요.</b> 손이 인식된 프레임만 수집됩니다.</p>
+<p>동작 A: <span id="countA" class="count">0</span>개 / 동작 B: <span id="countB" class="count">0</span>개</p>
+<div class="btns"><button id="train" class="primary" disabled>🧠 학습 완료 · 조종 시작</button><button id="reset">학습 데이터 초기화</button></div>
+<div id="prediction" class="status">AI 예측: 학습 전</div><div class="meter"><div id="meter"></div></div>
+</section></div><div>
+<section class="card"><h2>3. 캐릭터 업로드하기</h2><label class="upload" for="image">🖼️ 캐릭터 이미지 선택</label><input id="image" type="file" accept="image/png,image/jpeg,image/webp"><p class="tiny">다른 플랫폼에서 만든 PNG/JPG/WebP 파일을 올릴 수 있어요. 투명 배경 PNG를 추천해요.</p>
+<div class="stage"><img id="character" class="character" alt="움직이는 캐릭터" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='310' viewBox='0 0 220 310'%3E%3Cpath d='M70 115 Q110 98 150 115 L156 213 L64 213 Z' fill='%23677de5'/%3E%3Ccircle cx='110' cy='65' r='54' fill='%23ffce9e'/%3E%3Ccircle cx='91' cy='62' r='6' fill='%23353c57'/%3E%3Ccircle cx='129' cy='62' r='6' fill='%23353c57'/%3E%3Cpath d='M91 86 Q110 101 129 86' stroke='%23b75d64' stroke-width='5' fill='none'/%3E%3Cpath d='M70 133 L30 188 M150 133 L190 188 M91 212 L80 285 M130 212 L141 285' stroke='%23677de5' stroke-width='23' stroke-linecap='round'/%3E%3C/svg%3E"></div>
+<div id="action" class="status">캐릭터 대기 중</div><div class="btns"><button id="demoA">A 점프 테스트</button><button id="demoB">B 춤 테스트</button><button id="idle">동작 정지</button></div>
+<p class="tiny">동작 A를 인식하면 <b>점프</b>, 동작 B를 인식하면 <b>춤</b>. 캐릭터 이미지 전체를 움직이는 애니메이션이며, 팔·다리를 개별적으로 구부리지는 않습니다.</p>
+</section></div></div>
+<section class="card"><h2>사용 전에 꼭 확인!</h2><p class="tiny"><b>카메라 권한 팝업이 안 뜬다면:</b> HTML 파일을 직접 누르지 말고 HTTPS 웹사이트에 게시해서 접속해 주세요. Chrome 앱의 카메라 권한과 태블릿의 '카메라 액세스'도 켜져 있어야 합니다. AI 모델은 첫 실행 시 인터넷으로 다운로드합니다. 학습 데이터는 이 페이지 메모리에만 저장되고, 새로고침하면 사라집니다. 카메라 영상이나 수집 데이터가 이 코드에 의해 서버로 업로드되지는 않습니다.</p></section>
+<footer>손 랜드마크: MediaPipe Hand Landmarker · 분류: 직접 수집한 예시를 사용하는 k-NN(지도학습) · 무료 정적 웹페이지</footer>
+</main>
+<script type="module">
+const $=id=>document.getElementById(id),video=$('camera'),status=$('status');
+let stream=null,detector=null,ready=false,trained=false,latest=null,collecting=null,raf=0,lastFrame=-1,lastInfer=0,loadBusy=false,objectUrl=null;
+const data={A:[],B:[]};let smoothed='',streak=0;
+function say(msg,type=''){status.textContent=msg;status.className='status '+type}
+function action(label){$('character').className='character '+(label==='A'?'jump':label==='B'?'dance':'');$('action').textContent=label==='A'?'✌️ 동작 A 인식 → 점프!':label==='B'?'🖐️ 동작 B 인식 → 춤!':'캐릭터 대기 중'}
+$('demoA').onclick=()=>action('A');$('demoB').onclick=()=>action('B');$('idle').onclick=()=>action('');
+$('image').onchange=e=>{const f=e.target.files?.[0];if(!f)return;if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(f);$('character').src=objectUrl};
+function update(){for(const l of ['A','B'])$('count'+l).textContent=data[l].length;$('train').disabled=!(ready&&data.A.length>=12&&data.B.length>=12)}
+function normalize(points){const w=points[0],m=points[9];const scale=Math.hypot(m.x-w.x,m.y-w.y,m.z-w.z)||.05;const xAxis=Math.atan2(m.y-w.y,m.x-w.x);const cos=Math.cos(-xAxis),sin=Math.sin(-xAxis);return points.flatMap(p=>{const x=(p.x-w.x)/scale,y=(p.y-w.y)/scale;return [x*cos-y*sin,x*sin+y*cos,(p.z-w.z)/scale]})}
+async function loadModel(){if(detector)return;say('AI 손 인식 모델을 다운로드하는 중… (처음에는 시간이 걸릴 수 있어요)');const {HandLandmarker,FilesetResolver}=await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14');const vision=await FilesetResolver.forVisionTasks('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm');detector=await HandLandmarker.createFromOptions(vision,{baseOptions:{modelAssetPath:'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',delegate:'CPU'},runningMode:'VIDEO',numHands:1})}
+$('start').onclick=async()=>{if(loadBusy||stream)return;loadBusy=true;$('start').disabled=true;try{
+if(!navigator.mediaDevices?.getUserMedia)throw new Error('카메라 API를 사용할 수 없습니다. HTTPS 주소에서 열어 주세요. (파일 직접 열기 불가)');
+say('1/2 카메라 권한 요청 중…');
+stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:'user',width:{ideal:640},height:{ideal:480}}});video.srcObject=stream;await video.play();$('stop').disabled=false;
+say('카메라 연결 성공! 2/2 AI 모델을 준비하는 중…','good');
+try{await loadModel();ready=true;for(const l of ['A','B'])$('collect'+l).disabled=false;update();say('준비 완료! 손동작 A와 B를 각각 길게 눌러 수집하세요.','good');if(!raf)raf=requestAnimationFrame(loop)}catch(e){say('카메라는 켜졌지만 AI 모델 로딩 실패: '+e.message,'bad')}
+}catch(e){say('카메라 오류 ('+(e.name||'Error')+'): '+e.message+' — HTTPS 접속, Android 카메라 권한, 카메라 액세스를 확인하세요.','bad');if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}video.srcObject=null;$('start').disabled=false}finally{loadBusy=false}};
+$('stop').onclick=()=>{ready=false;trained=false;collecting=null;stream?.getTracks().forEach(t=>t.stop());stream=null;video.srcObject=null;for(const l of ['A','B'])$('collect'+l).disabled=true;$('train').disabled=true;$('start').disabled=false;$('stop').disabled=true;latest=null;action('');say('카메라가 꺼졌습니다. 기존 학습 예시는 남아 있어요.')};
+function add(label){if(!latest)return;data[label].push([...latest]);if(data[label].length>250)data[label].shift();trained=false;update()}
+for(const l of ['A','B']){const btn=$('collect'+l);btn.addEventListener('pointerdown',e=>{e.preventDefault();if(!ready)return;collecting=l;btn.setPointerCapture(e.pointerId);add(l)});btn.addEventListener('pointerup',()=>collecting=null);btn.addEventListener('pointercancel',()=>collecting=null);btn.addEventListener('lostpointercapture',()=>collecting=null)}
+$('reset').onclick=()=>{data.A=[];data.B=[];trained=false;smoothed='';streak=0;update();action('');$('prediction').textContent='AI 예측: 데이터 초기화';$('meter').style.width='0%'};
+$('train').onclick=()=>{if(!ready||data.A.length<12||data.B.length<12){say('각 동작을 최소 12개씩 수집해야 해요.');return}trained=true;smoothed='';streak=0;say('학습 완료! 이제 A 또는 B 손동작을 보여 주세요.','good')};
+function predict(v){const distances=[];for(const label of ['A','B'])for(const example of data[label]){let d=0;for(let i=0;i<v.length;i++)d+=(v[i]-example[i])**2;distances.push({label,d})}distances.sort((a,b)=>a.d-b.d);const neighbors=distances.slice(0,7);const votes={A:0,B:0};for(const n of neighbors)votes[n.label]++;const label=votes.A>=votes.B?'A':'B';return {label,votes:votes[label],total:neighbors.length}}
+function loop(now){raf=requestAnimationFrame(loop);if(!ready||!stream||video.readyState<2||now-lastInfer<140||video.currentTime===lastFrame)return;lastInfer=now;lastFrame=video.currentTime;try{const out=detector.detectForVideo(video,now);latest=out.landmarks?.length?normalize(out.landmarks[0]):null;if(collecting&&latest)add(collecting);if(trained){if(!latest){$('prediction').textContent='손을 카메라에 보여 주세요.';$('meter').style.width='0%';streak=0;return}const r=predict(latest);$('prediction').textContent=`AI 예측: 동작 ${r.label} (가까운 예시 ${r.total}개 중 ${r.votes}개 일치)`;$('meter').style.width=(100*r.votes/r.total)+'%';if(r.votes>=5){if(smoothed===r.label)streak++;else{smoothed=r.label;streak=1}if(streak>=3)action(r.label)}else streak=0}}catch(e){say('손 인식 중 오류: '+e.message,'bad')}}
+update();
+</script></body></html>
